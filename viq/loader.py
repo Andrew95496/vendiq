@@ -15,6 +15,8 @@ class ExcelLoader:
             df = pd.read_excel(self.file_path, header=11)
             df = df.iloc[:, 1:]
             df = df.iloc[10:, :]
+            df = df[~df.iloc[:, 0].str.startswith("zz", na=False)]
+
 
             if df.empty:
                 raise ValueError

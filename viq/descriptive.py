@@ -1,6 +1,9 @@
 import pandas as pd
 from loader import ExcelLoader
 
+pd.set_option("display.float_format", "{:.0f}".format)
+
+
 class Baseline:
     def __init__(self, df: pd.DataFrame):
         self.df = df
@@ -24,4 +27,4 @@ if __name__ == "__main__":
     baseline = Baseline(df)
     result = baseline.average_weekly_sales()
 
-    print(result.head())
+    print(result)
