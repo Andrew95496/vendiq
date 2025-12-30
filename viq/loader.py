@@ -37,3 +37,4 @@ if __name__ == "__main__":
     loader = ExcelLoader("samples/sales-2.xlsx")
     df = loader.load()
     print(df.head())
+
