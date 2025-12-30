@@ -1,6 +1,6 @@
 cat <<EOF > .gitignore
 __pycache__/
-.venv/
+.viq/
 .env
 .DS_Store
 EOF
