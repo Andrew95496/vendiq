@@ -1,8 +1,9 @@
 import math
 import numpy as np
 
-from viq.monte_carlo.daily_demand import DailyDemand
+from daily_demand import DailyDemand
 
+'''Module to simulate asset inventory and stockouts using Monte Carlo simulation.'''
 
 class AssetSimulator:
     def __init__(
@@ -43,20 +44,21 @@ class AssetSimulator:
             if total_units_sold > inventory_at_start:
                 stockouts += 1
 
-        return {
-            "stockout_probability": stockouts / self.number_of_simulations,
-            "product_at_service": 1 - (stockouts / self.number_of_simulations),
-            "avg_demand": np.mean(cycle_totals),
-            "p95_demand": np.percentile(cycle_totals, 95),
-            "effective_inventory": math.floor(inventory_at_start)
-        }
+        return f'''
+            "Stockout_Probability": {round(stockouts / self.number_of_simulations, 3)},
+            "Product_at_Service": {round(1 - (stockouts / self.number_of_simulations), 3)},
+            "Avg_Demand": {round(np.mean(cycle_totals))}
+            "p95_Demand": {np.percentile(cycle_totals, 95)},
+            "Effective_Inventory": {math.floor(inventory_at_start)}
+            '''
+        
 if __name__ == "__main__":
     simulator = AssetSimulator(
-        average_daily_sales=5,
+        average_daily_sales=3,
         days_between_visits=7,
         lead_time_days=3,
-        par_level=50,
-        number_of_simulations=10000
+        par_level=20,
+        number_of_simulations=100000
     )
     results = simulator.run()
     print(results)

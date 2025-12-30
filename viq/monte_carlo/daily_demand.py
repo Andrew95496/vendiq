@@ -1,6 +1,7 @@
 import math
 import random
 
+'''Module to simulate daily demand using a Poisson distribution.'''
 
 class DailyDemand:
     def __init__(self, average_daily_sales):
