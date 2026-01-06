@@ -54,10 +54,10 @@ class AssetSimulator:
         
 if __name__ == "__main__":
     simulator = AssetSimulator(
-        average_daily_sales=3,
-        days_between_visits=7,
-        lead_time_days=3,
-        par_level=20,
+        average_daily_sales=.7,
+        days_between_visits=10,
+        lead_time_days=2,
+        par_level=14,
         number_of_simulations=100000
     )
     results = simulator.run()
