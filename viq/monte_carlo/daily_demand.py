@@ -3,11 +3,12 @@ import random
 
 '''Module to simulate daily demand using a Poisson distribution.'''
 
+
 class DailyDemand:
     def __init__(self, average_daily_sales):
         self.average_daily_sales = average_daily_sales
 
-    def draw_units_sold(self):
+    def __units_sold__(self):
         cutoff_value = math.exp(-self.average_daily_sales)
         units_sold_today = 0
         random_product = 1.0
@@ -18,6 +19,12 @@ class DailyDemand:
 
         return units_sold_today - 1
 
+
 if __name__ == "__main__":
-    daily_demand = DailyDemand(average_daily_sales=5)
-    print([daily_demand.draw_units_sold() for _ in range(10)])
+    daily_demand = DailyDemand(average_daily_sales=17.20)
+    print([daily_demand.__units_sold__() for _ in range(24)])
+
+
+
+
+

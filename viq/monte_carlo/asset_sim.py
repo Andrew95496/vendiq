@@ -37,13 +37,12 @@ class AssetSimulator:
             total_units_sold = 0
 
             for _ in range(self.days_between_visits):
-                total_units_sold += self.daily_demand.draw_units_sold()
+                total_units_sold += self.daily_demand.__units_sold__()
 
             cycle_totals.append(total_units_sold)
 
             if total_units_sold > inventory_at_start:
                 stockouts += 1
-        # print(cycle_totals)
 
         return f'''
             "Stockout_Probability": {round(stockouts / self.number_of_simulations, 3)},
@@ -55,10 +54,10 @@ class AssetSimulator:
         
 if __name__ == "__main__":
     simulator = AssetSimulator(
-        average_daily_sales=.23333,
-        days_between_visits=30,
-        lead_time_days=2,
-        par_level=4,
+        average_daily_sales=3,
+        days_between_visits=7,
+        lead_time_days=3,
+        par_level=20,
         number_of_simulations=100000
     )
     results = simulator.run()
