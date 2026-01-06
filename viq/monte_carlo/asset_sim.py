@@ -43,7 +43,7 @@ class AssetSimulator:
 
             if total_units_sold > inventory_at_start:
                 stockouts += 1
-        print(cycle_totals)
+        # print(cycle_totals)
 
         return f'''
             "Stockout_Probability": {round(stockouts / self.number_of_simulations, 3)},
@@ -55,10 +55,10 @@ class AssetSimulator:
         
 if __name__ == "__main__":
     simulator = AssetSimulator(
-        average_daily_sales=.32,
-        days_between_visits=7,
+        average_daily_sales=.23333,
+        days_between_visits=30,
         lead_time_days=2,
-        par_level=16,
+        par_level=4,
         number_of_simulations=100000
     )
     results = simulator.run()
