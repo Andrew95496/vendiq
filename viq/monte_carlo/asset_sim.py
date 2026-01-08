@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from pprint import pprint
 
 from daily_demand import DailyDemand
 
@@ -21,7 +22,7 @@ class AssetSimulator:
         self.number_of_simulations = number_of_simulations
         self.daily_demand = DailyDemand(average_daily_sales)
 
-    def starting_inventory(self):
+    def __on_hand__(self):
         return max(
             self.par_level
             - (self.average_daily_sales * self.lead_time_days),
@@ -31,26 +32,26 @@ class AssetSimulator:
     def run(self):
         cycle_totals = []
         stockouts = 0
-        inventory_at_start = self.starting_inventory()
+        inventory_at_start = self.__on_hand__()
 
         for _ in range(self.number_of_simulations):
             total_units_sold = 0
 
             for _ in range(self.days_between_visits):
-                total_units_sold += self.daily_demand.__units_sold__()
+                total_units_sold += self.daily_demand._units_sold_()
 
             cycle_totals.append(total_units_sold)
 
             if total_units_sold > inventory_at_start:
                 stockouts += 1
 
-        return f'''
-            "Stockout_Probability": {round(stockouts / self.number_of_simulations, 3)},
-            "Product_at_Service": {round(1 - (stockouts / self.number_of_simulations), 3)},
-            "Avg_Demand": {round(np.mean(cycle_totals))}
-            "p95_Demand": {np.percentile(cycle_totals, 95)},
-            "Effective_Inventory": {math.floor(inventory_at_start)}
-            '''
+        return {
+    "stockout": stockouts / self.number_of_simulations,
+    "availability": 1 - (stockouts / self.number_of_simulations),
+    "average_cycle_demand": int(np.mean(cycle_totals)),
+    "p95_cycle_demand": float(np.percentile(cycle_totals, 95)),
+    "effective_inventory": math.floor(inventory_at_start)
+}
         
 if __name__ == "__main__":
     simulator = AssetSimulator(
@@ -61,4 +62,4 @@ if __name__ == "__main__":
         number_of_simulations=100000
     )
     results = simulator.run()
-    print(results)
+    pprint(results)

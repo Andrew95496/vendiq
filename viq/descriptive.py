@@ -1,5 +1,5 @@
 import pandas as pd
-from loader import ExcelLoader
+from viq.Load.loader import ExcelLoader
 
 pd.set_option("display.float_format", "{:.0f}".format)
 

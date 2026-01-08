@@ -8,7 +8,7 @@ class DailyDemand:
     def __init__(self, average_daily_sales):
         self.average_daily_sales = average_daily_sales
 
-    def __units_sold__(self):
+    def _units_sold_(self):
         cutoff_value = math.exp(-self.average_daily_sales)
         units_sold_today = 0
         random_product = 1.0
@@ -21,8 +21,8 @@ class DailyDemand:
 
 
 if __name__ == "__main__":
-    daily_demand = DailyDemand(average_daily_sales=17.20)
-    print([daily_demand.__units_sold__() for _ in range(24)])
+    daily_demand = DailyDemand(average_daily_sales=2.6)
+    print([daily_demand._units_sold_() for _ in range(365)])
 
 
 
