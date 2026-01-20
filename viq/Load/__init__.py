@@ -1,4 +1,4 @@
-from viq.load.ts_loader import TimeSeriesLoader
+from viq.load.timeseries_loader import TimeSeriesLoader
 
 __all__ = [
     "TimeSeriesLoader"

@@ -1,4 +1,4 @@
 from daily_demand import DailyDemand
-from asset_sim import AssetSimulator
+from viq.simulation.asset_monte_carlo import AssetSimulator
 
 __all__ = ["DailyDemand", "AssetSimulator"]
