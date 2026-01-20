@@ -55,10 +55,10 @@ class CycleSimulator:
         
 if __name__ == "__main__":
     simulator = CycleSimulator(
-        average_daily_sales=1,
-        days_between_visits=30,
+        average_daily_sales=.07,
+        days_between_visits=14,
         lead_time_days=2,
-        par_level=20,
+        par_level=4,
         number_of_simulations=100000
     )
     results = simulator.sim()
