@@ -6,7 +6,7 @@ from daily_demand import DailyDemand
 
 '''Module to simulate asset inventory and stockouts using Monte Carlo simulation'''
 
-class CycleSimulator:
+class ItemRestockingMonteCarlo:
     def __init__(
         self,
         average_daily_sales,
@@ -54,7 +54,7 @@ class CycleSimulator:
 }
         
 if __name__ == "__main__":
-    simulator = CycleSimulator(
+    simulator = ItemRestockingMonteCarlo(
         average_daily_sales=.127,
         days_between_visits=14,
         lead_time_days=2,
