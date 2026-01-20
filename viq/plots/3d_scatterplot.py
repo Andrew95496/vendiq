@@ -47,6 +47,7 @@ if __name__ == "__main__":
     import pandas as pd
 
     df = pd.read_excel("/Users/andrewleacock1/Downloads/scat.xlsx")
+    
 
     Scatter3DPlot(
         x=df["Avg Qty Sold per Visit"],
@@ -54,7 +55,7 @@ if __name__ == "__main__":
         z=df["Avg Outs per Visit"],
         c=df["Number Spoiled"],
         asset_id=df["Asset ID"],
-        customer_name=df["Customer Name"],
+        customer_name=df["Branch Name"], # Customer Name
         opacity=0.5
     ).show()
 
