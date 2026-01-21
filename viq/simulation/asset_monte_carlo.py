@@ -55,10 +55,10 @@ class ItemRestockingMonteCarlo:
         
 if __name__ == "__main__":
     simulator = ItemRestockingMonteCarlo(
-        average_daily_sales=.127,
-        days_between_visits=14,
+        average_daily_sales=.47,
+        days_between_visits=28,
         lead_time_days=2,
-        par_level=5,
+        par_level=17,
         number_of_simulations=100000
     )
     results = simulator.sim()
