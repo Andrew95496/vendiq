@@ -58,6 +58,7 @@ class ItemRestockingMonteCarlo:
             "effective_inventory": math.floor(inventory_at_start),
             "availability": 1 - (stockouts / self.number_of_simulations),
             "stockout_probability": stockouts / self.number_of_simulations,
+            "current_par_level": self.par_level
         }
 
 
@@ -102,6 +103,7 @@ def display_results(results):
         print(f"Effective Inventory: {r['effective_inventory']}")
         print(f"Availability:        {r['availability']:.2%}")
         print(f"Stockout Prob:       {r['stockout_probability']:.2%}")
+        print(f"Current Par Level:   {r['current_par_level']}")
     print("=" * 60)
 
 
@@ -137,26 +139,25 @@ if __name__ == "__main__":
     month_columns = get_month_columns(df_main)
 
     # -----------------------------
-    # PAR LOOKUP (NO MERGE)
+    # PAR LOOKUP
+    # Presence in df_par == in machine
     # -----------------------------
     par_lookup = (
         df_par
         .set_index("Item Name")["Vending Par Level"]
     )
 
-    df_main["Par Level"] = (
-        df_main["Item Name"]
-        .map(par_lookup)
-        .fillna(0)
-        .astype(int)
-    )
-
     # -----------------------------
-    # RUN SIMS (ONLY IF IN MACHINE)
+    # RUN SIMS (ONLY ITEMS IN MACHINE)
     # -----------------------------
     results = []
 
     for _, row in df_main.iterrows():
+
+        item_name = row["Item Name"]
+
+        if item_name not in par_lookup:
+            continue
 
         avg_daily_sales = compute_avg_daily_sales_after_first_sale(
             row=row,
@@ -168,18 +169,13 @@ if __name__ == "__main__":
             continue
 
         mc = ItemRestockingMonteCarlo(
-            item_name=row["Item Name"],
+            item_name=item_name,
             average_daily_sales=avg_daily_sales,
             days_between_visits=DAYS_BETWEEN_VISITS,
             lead_time_days=LEAD_TIME_DAYS,
-            par_level=row["Par Level"],
+            par_level=int(par_lookup[item_name]),
             number_of_simulations=SIMS
         )
-
-        # IF NOT IN MACHINE, SKIP ENTIRELY
-        effective_inventory = math.floor(mc.__on_hand__())
-        if effective_inventory == 0:
-            continue
 
         results.append(mc.sim())
 
