@@ -7,16 +7,7 @@ from daily_demand import DailyDemand
 
 
 # -----------------------------
-# CONFIGURABLE MODEL CONSTANTS
-# -----------------------------
-DAYS_PER_MONTH = 30
-DAYS_BETWEEN_VISITS = 14
-LEAD_TIME_DAYS = 2
-SIMS = 10_000
-
-
-# -----------------------------
-# MONTE CARLO CLASS (UNCHANGED)
+# MONTE CARLO CLASS
 # -----------------------------
 class ItemRestockingMonteCarlo:
     def __init__(
@@ -78,12 +69,12 @@ def get_month_columns(df):
     return [c for c in df.columns if pattern.match(str(c))]
 
 
-def compute_avg_daily_sales_after_first_sale(row, month_columns):
+def compute_avg_daily_sales_after_first_sale(row, month_columns, days_per_month):
     monthly_sales = (
-    pd.to_numeric(row[month_columns], errors="coerce")
-    .fillna(0.0)
-    .values
-)
+        pd.to_numeric(row[month_columns], errors="coerce")
+        .fillna(0.0)
+        .values
+    )
 
     first_sale_idx = None
     for i, val in enumerate(monthly_sales):
@@ -96,7 +87,7 @@ def compute_avg_daily_sales_after_first_sale(row, month_columns):
 
     valid_sales = monthly_sales[first_sale_idx:]
     total_units = valid_sales.sum()
-    total_days = len(valid_sales) * DAYS_PER_MONTH
+    total_days = len(valid_sales) * days_per_month
 
     return total_units / total_days
 
@@ -119,7 +110,17 @@ def display_results(results):
 # -----------------------------
 if __name__ == "__main__":
 
-    # load files (YOUR paths)
+    # -----------------------------
+    # CONFIG
+    # -----------------------------
+    DAYS_PER_MONTH = 30
+    DAYS_BETWEEN_VISITS = 14
+    LEAD_TIME_DAYS = 2
+    SIMS = 10_000
+
+    # -----------------------------
+    # LOAD DATA (YOUR PATHS)
+    # -----------------------------
     df_main = pd.read_excel(
         "/Users/andrewleacock1/Downloads/15432.xlsx",
         header=11
@@ -130,10 +131,14 @@ if __name__ == "__main__":
         header=11
     )
 
-    # detect month columns dynamically
+    # -----------------------------
+    # DETECT MONTH COLUMNS
+    # -----------------------------
     month_columns = get_month_columns(df_main)
 
-    # par lookup (no merge)
+    # -----------------------------
+    # PAR LOOKUP (NO MERGE)
+    # -----------------------------
     par_lookup = (
         df_par
         .set_index("Item Name")["Vending Par Level"]
@@ -146,13 +151,17 @@ if __name__ == "__main__":
         .astype(int)
     )
 
+    # -----------------------------
+    # RUN SIMS (ONLY IF IN MACHINE)
+    # -----------------------------
     results = []
 
     for _, row in df_main.iterrows():
 
         avg_daily_sales = compute_avg_daily_sales_after_first_sale(
             row=row,
-            month_columns=month_columns
+            month_columns=month_columns,
+            days_per_month=DAYS_PER_MONTH
         )
 
         if avg_daily_sales <= 0:
@@ -167,6 +176,14 @@ if __name__ == "__main__":
             number_of_simulations=SIMS
         )
 
+        # IF NOT IN MACHINE, SKIP ENTIRELY
+        effective_inventory = math.floor(mc.__on_hand__())
+        if effective_inventory == 0:
+            continue
+
         results.append(mc.sim())
 
+    # -----------------------------
+    # OUTPUT
+    # -----------------------------
     display_results(results)
