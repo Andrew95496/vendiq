@@ -116,7 +116,7 @@ if __name__ == "__main__":
     # CONFIG
     # -----------------------------
     DAYS_PER_MONTH = 30
-    DAYS_BETWEEN_VISITS = 14
+    DAYS_BETWEEN_VISITS = 7
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
@@ -124,12 +124,12 @@ if __name__ == "__main__":
     # LOAD DATA (YOUR PATHS)
     # -----------------------------
     df_main = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/15432.xlsx",
+        "/Users/andrewleacock1/Downloads/12221.xlsx",
         header=11
     )
 
     df_par = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/15432_par.xlsx",
+        "/Users/andrewleacock1/Downloads/12221_par.xlsx",
         header=11
     )
 
