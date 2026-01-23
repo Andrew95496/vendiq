@@ -116,7 +116,7 @@ if __name__ == "__main__":
     # CONFIG
     # -----------------------------
     DAYS_PER_MONTH = 30
-    DAYS_BETWEEN_VISITS = 7
+    DAYS_BETWEEN_VISITS = 3
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
@@ -124,14 +124,13 @@ if __name__ == "__main__":
     # LOAD DATA (YOUR PATHS)
     # -----------------------------
     df_main = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/12221.xlsx",
-        header=11
+        "/Users/andrewleacock1/Downloads/276.xlsx"
     )
 
     df_par = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/12221_par.xlsx",
-        header=11
+        "/Users/andrewleacock1/Downloads/276_par.xlsx"
     )
+
 
     # -----------------------------
     # DETECT MONTH COLUMNS
@@ -142,9 +141,18 @@ if __name__ == "__main__":
     # PAR LOOKUP
     # Presence in df_par == in machine
     # -----------------------------
+    if "Vending Par Level" in df_par.columns:
+        par_col = "Vending Par Level"
+    elif "MM Par" in df_par.columns:
+        par_col = "MM Par"
+    else:
+        raise ValueError(
+            "Par file must contain either 'Vending Par Level' or 'MM Par'"
+        )
+
     par_lookup = (
         df_par
-        .set_index("Item Name")["Vending Par Level"]
+        .set_index("Item Name")[par_col]
     )
 
     # -----------------------------
@@ -156,6 +164,7 @@ if __name__ == "__main__":
 
         item_name = row["Item Name"]
 
+        # NOT IN PAR FILE -> NOT IN MACHINE
         if item_name not in par_lookup:
             continue
 
