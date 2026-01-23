@@ -52,29 +52,86 @@ vendiq/
 ## Example Usage
 
 ```python
-import vendiq as vq
+ # -----------------------------
+    # CONFIG
+    # -----------------------------
+    DAYS_PER_MONTH = 30
+    DAYS_BETWEEN_VISITS = 3
+    LEAD_TIME_DAYS = 2
+    SIMS = 10_000
 
-simulator = vq.monte_carlo.AssetSimulator(
-    average_daily_sales=4.74,
-    days_between_visits=2,
-    lead_time_days=2,
-    par_level=21,
-    number_of_simulations=10_000
-)
+    # -----------------------------
+    # LOAD DATA (YOUR PATHS)
+    # -----------------------------
+    df_main = pd.read_excel(
+        "/Users/andrewleacock1/Downloads/276.xlsx"
+    )
 
-results = simulator.run()
+    df_par = pd.read_excel(
+        "/Users/andrewleacock1/Downloads/276_par.xlsx"
+    )
 
-```
 
-## Example Output
+    # -----------------------------
+    # DETECT MONTH COLUMNS
+    # -----------------------------
+    month_columns = get_month_columns(df_main)
 
-```
-{
-    "Stockout_Probability": 0.237,
-    "Product_at_Service": 0.763,
-    "Avg_Demand": 14,
-    "P95_Demand": 18,
-    "Effective_Inventory": 11
-}
+    # -----------------------------
+    # PAR LOOKUP
+    # Presence in df_par == in machine
+    # -----------------------------
+    if "Vending Par Level" in df_par.columns:
+        par_col = "Vending Par Level"
+    elif "MM Par" in df_par.columns:
+        par_col = "MM Par"
+    else:
+        raise ValueError(
+            "Par file must contain either 'Vending Par Level' or 'MM Par'"
+        )
+
+    par_lookup = (
+        df_par
+        .set_index("Item Name")[par_col]
+    )
+
+    # -----------------------------
+    # RUN SIMS (ONLY ITEMS IN MACHINE)
+    # -----------------------------
+    results = []
+
+    for _, row in df_main.iterrows():
+
+        item_name = row["Item Name"]
+
+        # NOT IN PAR FILE -> NOT IN MACHINE
+        if item_name not in par_lookup:
+            continue
+
+        avg_daily_sales = compute_avg_daily_sales_after_first_sale(
+            row=row,
+            month_columns=month_columns,
+            days_per_month=DAYS_PER_MONTH
+        )
+
+        if avg_daily_sales <= 0:
+            continue
+
+        mc = ItemRestockingMonteCarlo(
+            item_name=item_name,
+            average_daily_sales=avg_daily_sales,
+            days_between_visits=DAYS_BETWEEN_VISITS,
+            lead_time_days=LEAD_TIME_DAYS,
+            par_level=int(par_lookup[item_name]),
+            number_of_simulations=SIMS
+        )
+
+        results.append(mc.sim())
+
+    # -----------------------------
+    # OUTPUT
+    # -----------------------------
+    display_results(results)
+
 
 ```
