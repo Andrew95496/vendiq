@@ -3,7 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from daily_demand import DailyDemand
+from viq.simulation.poisson.daily_demand import DailyDemand
 
 
 # -----------------------------
