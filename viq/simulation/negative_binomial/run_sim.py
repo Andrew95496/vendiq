@@ -13,8 +13,8 @@ if __name__ == "__main__":
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/14096.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/14096_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/16657.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/16657_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -28,6 +28,7 @@ if __name__ == "__main__":
     par_lookup = df_par.set_index("Item Name")[par_col]
 
     results = []
+    sales_rows = []
 
     for _, row in df_main.iterrows():
         item = row["Item Name"]
@@ -54,8 +55,22 @@ if __name__ == "__main__":
             number_of_simulations=SIMS
         )
 
-        results.append(sim.run())
+        result = sim.run()
+        results.append(result)
 
+        for i, demand in enumerate(result["simulated_sales"]):
+            sales_rows.append({
+                "Item Name": item,
+                "Simulation": i + 1,
+                "Cycle Demand": demand,
+                "Par Level": result["current_par_level"],
+                "Avg Daily Sales": result["avg_daily_sales"],
+                "Daily Std": result["daily_std"]
+            })
+
+    # -----------------------------
+    # PRINT SUMMARY
+    # -----------------------------
     for r in results:
         print("=" * 60)
         print(r["item_name"])
@@ -68,3 +83,13 @@ if __name__ == "__main__":
         print(f"Stockout Prob:       {r['stockout_probability']:.2%}")
         print(f"Current Par Level:   {r['current_par_level']}")
     print("=" * 60)
+
+    # -----------------------------
+    # EXPORT SIMULATED SALES
+    # -----------------------------
+    df_sales = pd.DataFrame(sales_rows)
+
+    df_sales.to_excel(
+        "/Users/andrewleacock1/Downloads/simulated_sales.xlsx",
+        index=False
+    )

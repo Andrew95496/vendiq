@@ -1,4 +1,5 @@
 # asset_sim.py
+
 import math
 import numpy as np
 from daily_demand import DailyDemand
@@ -45,8 +46,11 @@ class AssetSimulation:
                 for _ in range(self.days_between_visits)
             )
             cycle_totals.append(sold)
+
             if sold > inventory:
                 stockouts += 1
+
+        cycle_totals = np.array(cycle_totals)
 
         return {
             "item_name": self.item_name,
@@ -58,4 +62,7 @@ class AssetSimulation:
             "availability": 1 - stockouts / self.number_of_simulations,
             "stockout_probability": stockouts / self.number_of_simulations,
             "current_par_level": self.par_level,
+
+            # ✅ THIS FIXES EVERYTHING
+            "simulated_sales": cycle_totals.tolist()
         }
