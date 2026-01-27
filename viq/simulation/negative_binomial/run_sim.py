@@ -9,12 +9,12 @@ from stats_utils import get_month_columns, daily_stats_since_launch
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
-    DAYS_BETWEEN_VISITS = 21
+    DAYS_BETWEEN_VISITS = 30
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/10191.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/10191_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/2904.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/2904_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # -----------------------------
     df_sales = pd.DataFrame(sales_rows)
 
-    df_sales.to_excel(
-        "/Users/andrewleacock1/Downloads/simulated_sales_10191.xlsx",
-        index=False
-    )
+    df_sales.to_csv(
+    "/Users/andrewleacock1/Downloads/simulated_sales_2904.csv",
+    index=False
+)
