@@ -62,7 +62,7 @@ class SimulationRiskBoxPlot:
             y=self.demand_col,
             points="outliers",
             color="Risk Tier",
-            category_orders={self.item_col: list(self.p95_order)}
+            category_orders={self.item_col: list(self.p95_order)},
         )
 
         for i, item in enumerate(self.p95_order):
@@ -85,7 +85,7 @@ class SimulationRiskBoxPlot:
 if __name__ == "__main__":
 
     df = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/simulated_sales.xlsx"
+        "/Users/andrewleacock1/Downloads/simulated_sales_10191.xlsx"
     )
 
     plotter = SimulationRiskBoxPlot(df)
