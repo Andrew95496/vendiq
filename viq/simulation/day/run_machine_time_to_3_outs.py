@@ -14,8 +14,8 @@ if __name__ == "__main__":
     DAYS_PER_MONTH = 30
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/14481.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/14481_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/v0030.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/v0030_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
