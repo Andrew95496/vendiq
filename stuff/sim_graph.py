@@ -85,7 +85,7 @@ class SimulationRiskBoxPlot:
 if __name__ == "__main__":
 
     df = pd.read_csv(
-        "/Users/andrewleacock1/Downloads/simulated_sales_14024.csv"
+        "/Users/andrewleacock1/Downloads/simulated_sales_15241.csv"
     )
 
     plotter = SimulationRiskBoxPlot(df)
