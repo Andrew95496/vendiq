@@ -13,8 +13,8 @@ if __name__ == "__main__":
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/13391.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/13391_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/255.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/255_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -90,6 +90,6 @@ if __name__ == "__main__":
     df_sales = pd.DataFrame(sales_rows)
 
     df_sales.to_csv(
-    "/Users/andrewleacock1/Downloads/simulated_sales_13391.csv",
+    "/Users/andrewleacock1/Downloads/simulated_sales_255.csv",
     index=False
 )
