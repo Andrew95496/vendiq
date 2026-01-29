@@ -38,6 +38,7 @@ class MachineTimeToThreeOutsSimulation:
         days_to_120_vends = []
         prob_120_before_3 = 0
 
+        # counts how often an item is IN THE FIRST 3 OUTS
         out_counter = Counter()
 
         for _ in range(self.number_of_simulations):
@@ -47,7 +48,7 @@ class MachineTimeToThreeOutsSimulation:
                 for item in self.items
             }
 
-            outs = set()
+            outs = []
             days = 0
             cumulative_sales = 0.0
 
@@ -56,7 +57,6 @@ class MachineTimeToThreeOutsSimulation:
 
             while days < self.max_days:
                 days += 1
-
                 daily_machine_sales = 0.0
 
                 for item in self.items:
@@ -74,8 +74,11 @@ class MachineTimeToThreeOutsSimulation:
                         inventory[name] -= sold
 
                         if inventory[name] <= 0:
-                            outs.add(name)
-                            out_counter[name] += 1
+                            outs.append(name)
+
+                            # ONLY count if it is one of the first 3 outs
+                            if len(outs) <= 3:
+                                out_counter[name] += 1
 
                 cumulative_sales += daily_machine_sales
 
@@ -100,6 +103,19 @@ class MachineTimeToThreeOutsSimulation:
             days_to_3_outs.append(day_3)
             days_to_120_vends.append(day_120)
 
+        item_out_percentages = {
+            item: count / self.number_of_simulations
+            for item, count in out_counter.items()
+        }
+
+        top_10_out_items = dict(
+            sorted(
+                item_out_percentages.items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:10]
+        )
+
         return {
             "avg_days_to_3_outs": float(np.mean(days_to_3_outs)),
             "avg_days_to_120_vends": float(np.mean(days_to_120_vends)),
@@ -118,8 +134,9 @@ class MachineTimeToThreeOutsSimulation:
 
             "prob_120_vends_before_3_outs": prob_120_before_3 / self.number_of_simulations,
 
-            "item_out_percentages": {
-                item: count / self.number_of_simulations
-                for item, count in out_counter.items()
-            }
+            # FULL distribution
+            "item_out_percentages": item_out_percentages,
+
+            # READY-TO-PRINT TOP 10
+            "top_10_items_to_run_out": top_10_out_items
         }

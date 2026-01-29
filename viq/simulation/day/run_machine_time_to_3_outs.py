@@ -7,14 +7,13 @@ from stats_utils import get_month_columns, daily_stats_since_launch
 
 init(autoreset=True)
 
-
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
     SIMS = 100
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/11989.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/11989_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/12400.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/12400_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -28,33 +27,21 @@ if __name__ == "__main__":
     par_lookup = df_par.set_index("Item Name")[par_col]
 
     items = []
-
     for _, row in df_main.iterrows():
         item = row["Item Name"]
-
         if not isinstance(item, str) or item.lower().startswith("zz"):
             continue
-
         if item not in par_lookup:
             continue
 
         mean, std = daily_stats_since_launch(
-            row,
-            month_columns,
-            DAYS_PER_MONTH
+            row, month_columns, DAYS_PER_MONTH
         )
 
-        if (
-            mean is None
-            or std is None
-            or not np.isfinite(mean)
-            or not np.isfinite(std)
-            or mean <= 0
-        ):
+        if mean is None or std is None or not np.isfinite(mean) or not np.isfinite(std) or mean <= 0:
             continue
 
         par = par_lookup[item]
-
         if not np.isfinite(par) or par <= 0:
             continue
 
@@ -65,14 +52,7 @@ if __name__ == "__main__":
             "par_level": int(par)
         })
 
-    if not items:
-        raise RuntimeError("No valid items after filtering")
-
-    sim = MachineTimeToThreeOutsSimulation(
-        items=items,
-        number_of_simulations=SIMS
-    )
-
+    sim = MachineTimeToThreeOutsSimulation(items, SIMS)
     result = sim.run()
 
     print(Fore.CYAN + "=" * 60)
@@ -93,12 +73,14 @@ if __name__ == "__main__":
 
     print(Fore.CYAN + "-" * 60)
 
-    print(
-        Fore.WHITE
-        + "P(120 Sales Before 3 Outs): "
-        + Style.BRIGHT
-        + Fore.YELLOW
-        + f"{result['prob_120_vends_before_3_outs']:.1%}"
-    )
+    print(Fore.WHITE + "P(120 Sales Before 3 Outs): " + Style.BRIGHT + Fore.YELLOW +
+          f"{result['prob_120_vends_before_3_outs']:.1%}")
+
+    print(Fore.CYAN + "=" * 60)
+    print(Fore.CYAN + Style.BRIGHT + "TOP ITEMS TO RUN OUT")
+    print(Fore.CYAN + "=" * 60)
+
+    for i, (item, pct) in enumerate(result["top_10_items_to_run_out"].items(), 1):
+        print(f"{Style.BRIGHT}{Fore.CYAN}{i:>2}. {Fore.WHITE}{item:<30} {Fore.YELLOW}{pct:.1%}")
 
     print(Fore.CYAN + "=" * 60)
