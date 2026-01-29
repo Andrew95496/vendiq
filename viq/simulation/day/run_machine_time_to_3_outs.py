@@ -11,10 +11,10 @@ init(autoreset=True)
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
-    SIMS = 10_000
+    SIMS = 100
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/3853.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/3853_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/12400.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/12400_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -73,20 +73,32 @@ if __name__ == "__main__":
         number_of_simulations=SIMS
     )
 
-    result = sim.run(return_raw=True)
-
-    df_sims = pd.DataFrame(result["raw_simulations"])
-    csv_path = "machine_time_to_3_outs_simulations.csv"
-    df_sims.to_csv(csv_path, index=False)
+    result = sim.run()
 
     print(Fore.CYAN + "=" * 60)
-    print(Fore.CYAN + Style.BRIGHT + "MACHINE TIME TO 3 OUTS")
+    print(Fore.CYAN + Style.BRIGHT + "MACHINE QUALITY VS SALES RISK")
     print(Fore.CYAN + "=" * 60)
 
-    print(Fore.WHITE + "Avg Days to 3 Outs: " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_3_outs']:.1f}")
-    print(Fore.WHITE + "P50 Days:           " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days']:.0f}")
-    print(Fore.WHITE + "P75 Days:           " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days']:.0f}")
-    print(Fore.WHITE + "P95 Days:           " + Style.BRIGHT + Fore.RED     + f"{result['p95_days']:.0f}")
-    print(Fore.WHITE + "Avg Sales @ 3 Outs: " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_sales_at_3_outs']:.1f}")
+    print(Fore.WHITE + "Avg Days to 3 Outs:   " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_3_outs']:.1f}")
+    print(Fore.WHITE + "P50 Days (3 Outs):    " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days']:.0f}")
+    print(Fore.WHITE + "P75 Days (3 Outs):    " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days']:.0f}")
+    print(Fore.WHITE + "P95 Days (3 Outs):    " + Style.BRIGHT + Fore.RED     + f"{result['p95_days']:.0f}")
+
+    print(Fore.CYAN + "-" * 60)
+
+    print(Fore.WHITE + "Avg Days to 120 Sales:" + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_120_vends']:.1f}")
+    print(Fore.WHITE + "P50 Days (120):       " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "P75 Days (120):       " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "P95 Days (120):       " + Style.BRIGHT + Fore.RED     + f"{result['p95_days_to_120_vends']:.0f}")
+
+    print(Fore.CYAN + "-" * 60)
+
+    print(
+        Fore.WHITE
+        + "P(120 Sales Before 3 Outs): "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['prob_120_vends_before_3_outs']:.1%}"
+    )
 
     print(Fore.CYAN + "=" * 60)
