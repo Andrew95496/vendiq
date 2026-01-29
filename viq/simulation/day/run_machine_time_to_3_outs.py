@@ -13,18 +13,10 @@ if __name__ == "__main__":
     DAYS_PER_MONTH = 30
     SIMS = 10_000
 
-    # -------------------------
-    # LOAD DATA
-    # -------------------------
-
     df_main = pd.read_excel("/Users/andrewleacock1/Downloads/3853.xlsx")
     df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/3853_par.xlsx")
 
     month_columns = get_month_columns(df_main)
-
-    # -------------------------
-    # PAR COLUMN RESOLUTION
-    # -------------------------
 
     if "Vending Par Level" in df_par.columns:
         par_col = "Vending Par Level"
@@ -35,22 +27,14 @@ if __name__ == "__main__":
 
     par_lookup = df_par.set_index("Item Name")[par_col]
 
-    # -------------------------
-    # BUILD ITEMS (HARD GUARDED)
-    # -------------------------
-
     items = []
-    dropped_nan = 0
-    dropped_zero = 0
 
     for _, row in df_main.iterrows():
         item = row["Item Name"]
 
-        # Skip ZZ items
         if not isinstance(item, str) or item.lower().startswith("zz"):
             continue
 
-        # Skip if no par
         if item not in par_lookup:
             continue
 
@@ -60,24 +44,19 @@ if __name__ == "__main__":
             DAYS_PER_MONTH
         )
 
-        # -------- HARD GUARDS --------
-        if mean is None or std is None:
-            dropped_nan += 1
-            continue
-
-        if not np.isfinite(mean) or not np.isfinite(std):
-            dropped_nan += 1
-            continue
-
-        if mean <= 0:
-            dropped_zero += 1
+        if (
+            mean is None
+            or std is None
+            or not np.isfinite(mean)
+            or not np.isfinite(std)
+            or mean <= 0
+        ):
             continue
 
         par = par_lookup[item]
 
         if not np.isfinite(par) or par <= 0:
             continue
-        # --------------------------------
 
         items.append({
             "item_name": item,
@@ -87,22 +66,18 @@ if __name__ == "__main__":
         })
 
     if not items:
-        raise RuntimeError("No valid items after filtering. Simulation aborted.")
-
-    # -------------------------
-    # RUN SIMULATION
-    # -------------------------
+        raise RuntimeError("No valid items after filtering")
 
     sim = MachineTimeToThreeOutsSimulation(
         items=items,
         number_of_simulations=SIMS
     )
 
-    result = sim.run()
+    result = sim.run(return_raw=True)
 
-    # -------------------------
-    # OUTPUT
-    # -------------------------
+    df_sims = pd.DataFrame(result["raw_simulations"])
+    csv_path = "machine_time_to_3_outs_simulations.csv"
+    df_sims.to_csv(csv_path, index=False)
 
     print(Fore.CYAN + "=" * 60)
     print(Fore.CYAN + Style.BRIGHT + "MACHINE TIME TO 3 OUTS")
@@ -115,27 +90,3 @@ if __name__ == "__main__":
     print(Fore.WHITE + "Avg Sales @ 3 Outs: " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_sales_at_3_outs']:.1f}")
 
     print(Fore.CYAN + "=" * 60)
-    print(Fore.CYAN + Style.BRIGHT + "TOP 10 ITEMS MOST FREQUENTLY IN 3 OUTS")
-    print(Fore.CYAN + "=" * 60)
-
-    for i, (item, pct) in enumerate(
-        sorted(
-            result["item_out_percentages"].items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:10],
-        start=1
-    ):
-        print(
-            f"{Style.BRIGHT}{Fore.CYAN}{i:>2}. "
-            f"{Fore.WHITE}{item:<30} "
-            f"{Style.BRIGHT}{Fore.YELLOW}{pct:.1%}"
-        )
-
-    print(Fore.CYAN + "=" * 60)
-
-    print(
-        Fore.WHITE
-        + f"Dropped items (NaN stats): {dropped_nan} | "
-        + f"Dropped items (zero mean): {dropped_zero}"
-    )

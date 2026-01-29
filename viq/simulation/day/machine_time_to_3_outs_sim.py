@@ -9,14 +9,6 @@ class MachineTimeToThreeOutsSimulation:
         number_of_simulations,
         max_days=365
     ):
-        """
-        items: list of dicts with keys:
-            - item_name
-            - avg_daily_sales
-            - daily_std
-            - par_level
-        """
-
         self.items = [
             item for item in items
             if not item["item_name"].lower().startswith("zz")
@@ -25,31 +17,27 @@ class MachineTimeToThreeOutsSimulation:
         self.number_of_simulations = number_of_simulations
         self.max_days = max_days
 
-    # -------------------------
-    # DEMAND SAMPLING
-    # -------------------------
-
     def _sample_daily_demand(self, mean, std):
-        """
-        Sample daily demand using Normal(mean, std).
-        Clipped at zero and rounded to integer units.
-        """
-        if std <= 0:
+        if not np.isfinite(mean) or mean <= 0:
+            return 0
+
+        if not np.isfinite(std) or std <= 0:
             return int(round(mean))
 
         demand = np.random.normal(mean, std)
+
+        if not np.isfinite(demand):
+            return 0
+
         return max(int(round(demand)), 0)
 
-    # -------------------------
-    # SIMULATION
-    # -------------------------
-
-    def run(self):
+    def run(self, return_raw=False):
         days_to_3_outs = []
         total_sales_at_3_outs = []
         out_counter = Counter()
+        raw_rows = []
 
-        for _ in range(self.number_of_simulations):
+        for sim_id in range(1, self.number_of_simulations + 1):
 
             inventory = {
                 item["item_name"]: item["par_level"]
@@ -91,16 +79,26 @@ class MachineTimeToThreeOutsSimulation:
             for name in outs[:3]:
                 out_counter[name] += 1
 
-        total_sims = self.number_of_simulations
+            if return_raw:
+                raw_rows.append({
+                    "simulation_id": sim_id,
+                    "days_to_3_outs": days,
+                    "total_sales_at_3_outs": cumulative_sales
+                })
 
-        return {
+        result = {
             "avg_days_to_3_outs": float(np.mean(days_to_3_outs)),
             "p50_days": float(np.percentile(days_to_3_outs, 50)),
             "p75_days": float(np.percentile(days_to_3_outs, 75)),
             "p95_days": float(np.percentile(days_to_3_outs, 95)),
             "avg_sales_at_3_outs": float(np.mean(total_sales_at_3_outs)),
             "item_out_percentages": {
-                item: count / total_sims
+                item: count / self.number_of_simulations
                 for item, count in out_counter.items()
             }
         }
+
+        if return_raw:
+            result["raw_simulations"] = raw_rows
+
+        return result

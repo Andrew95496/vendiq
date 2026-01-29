@@ -9,7 +9,7 @@ from stats_utils import get_month_columns, daily_stats_since_launch
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
-    DAYS_BETWEEN_VISITS = 7
+    DAYS_BETWEEN_VISITS = 30
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
