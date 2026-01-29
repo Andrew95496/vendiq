@@ -1,5 +1,4 @@
-# run_machine_time_to_3_outs.py
-
+import numpy as np
 import pandas as pd
 from colorama import Fore, Style, init
 
@@ -14,10 +13,18 @@ if __name__ == "__main__":
     DAYS_PER_MONTH = 30
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/v0030.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/v0030_par.xlsx")
+    # -------------------------
+    # LOAD DATA
+    # -------------------------
+
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/3853.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/3853_par.xlsx")
 
     month_columns = get_month_columns(df_main)
+
+    # -------------------------
+    # PAR COLUMN RESOLUTION
+    # -------------------------
 
     if "Vending Par Level" in df_par.columns:
         par_col = "Vending Par Level"
@@ -28,14 +35,22 @@ if __name__ == "__main__":
 
     par_lookup = df_par.set_index("Item Name")[par_col]
 
+    # -------------------------
+    # BUILD ITEMS (HARD GUARDED)
+    # -------------------------
+
     items = []
+    dropped_nan = 0
+    dropped_zero = 0
 
     for _, row in df_main.iterrows():
         item = row["Item Name"]
 
-        if item.lower().startswith("zz"):
+        # Skip ZZ items
+        if not isinstance(item, str) or item.lower().startswith("zz"):
             continue
 
+        # Skip if no par
         if item not in par_lookup:
             continue
 
@@ -45,15 +60,38 @@ if __name__ == "__main__":
             DAYS_PER_MONTH
         )
 
-        if mean <= 0:
+        # -------- HARD GUARDS --------
+        if mean is None or std is None:
+            dropped_nan += 1
             continue
+
+        if not np.isfinite(mean) or not np.isfinite(std):
+            dropped_nan += 1
+            continue
+
+        if mean <= 0:
+            dropped_zero += 1
+            continue
+
+        par = par_lookup[item]
+
+        if not np.isfinite(par) or par <= 0:
+            continue
+        # --------------------------------
 
         items.append({
             "item_name": item,
-            "avg_daily_sales": mean,
-            "daily_std": std,
-            "par_level": int(par_lookup[item])
+            "avg_daily_sales": float(mean),
+            "daily_std": float(std),
+            "par_level": int(par)
         })
+
+    if not items:
+        raise RuntimeError("No valid items after filtering. Simulation aborted.")
+
+    # -------------------------
+    # RUN SIMULATION
+    # -------------------------
 
     sim = MachineTimeToThreeOutsSimulation(
         items=items,
@@ -61,6 +99,10 @@ if __name__ == "__main__":
     )
 
     result = sim.run()
+
+    # -------------------------
+    # OUTPUT
+    # -------------------------
 
     print(Fore.CYAN + "=" * 60)
     print(Fore.CYAN + Style.BRIGHT + "MACHINE TIME TO 3 OUTS")
@@ -91,3 +133,9 @@ if __name__ == "__main__":
         )
 
     print(Fore.CYAN + "=" * 60)
+
+    print(
+        Fore.WHITE
+        + f"Dropped items (NaN stats): {dropped_nan} | "
+        + f"Dropped items (zero mean): {dropped_zero}"
+    )

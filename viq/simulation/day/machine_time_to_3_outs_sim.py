@@ -1,5 +1,3 @@
-# machine_time_to_3_outs_sim.py
-
 import numpy as np
 from collections import Counter
 
@@ -11,16 +9,40 @@ class MachineTimeToThreeOutsSimulation:
         number_of_simulations,
         max_days=365
     ):
+        """
+        items: list of dicts with keys:
+            - item_name
+            - avg_daily_sales
+            - daily_std
+            - par_level
+        """
+
         self.items = [
             item for item in items
             if not item["item_name"].lower().startswith("zz")
         ]
+
         self.number_of_simulations = number_of_simulations
         self.max_days = max_days
 
+    # -------------------------
+    # DEMAND SAMPLING
+    # -------------------------
+
     def _sample_daily_demand(self, mean, std):
+        """
+        Sample daily demand using Normal(mean, std).
+        Clipped at zero and rounded to integer units.
+        """
+        if std <= 0:
+            return int(round(mean))
+
         demand = np.random.normal(mean, std)
-        return max(demand, 0)
+        return max(int(round(demand)), 0)
+
+    # -------------------------
+    # SIMULATION
+    # -------------------------
 
     def run(self):
         days_to_3_outs = []
@@ -28,6 +50,7 @@ class MachineTimeToThreeOutsSimulation:
         out_counter = Counter()
 
         for _ in range(self.number_of_simulations):
+
             inventory = {
                 item["item_name"]: item["par_level"]
                 for item in self.items
