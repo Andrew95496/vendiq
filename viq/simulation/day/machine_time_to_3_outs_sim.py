@@ -21,43 +21,43 @@ class MachineTimeToThreeOutsSimulation:
 
     def _sample_daily_demand(self, mean, std):
         if not np.isfinite(mean) or mean <= 0:
-            return 0
+            return 0.0
 
         if not np.isfinite(std) or std <= 0:
-            return int(round(mean))
+            return float(mean)
 
         demand = np.random.normal(mean, std)
 
         if not np.isfinite(demand):
-            return 0
+            return 0.0
 
-        return max(int(round(demand)), 0)
+        return max(demand, 0.0)
 
     def run(self):
-        days_3_outs = []
-        days_120 = []
-
-        hit_120_before_3 = 0
+        days_to_3_outs = []
+        days_to_120_vends = []
+        prob_120_before_3 = 0
 
         out_counter = Counter()
 
         for _ in range(self.number_of_simulations):
 
             inventory = {
-                item["item_name"]: item["par_level"]
+                item["item_name"]: float(item["par_level"])
                 for item in self.items
             }
 
             outs = set()
             days = 0
-
-            cumulative_sales = 0
+            cumulative_sales = 0.0
 
             day_3 = None
             day_120 = None
 
             while days < self.max_days:
                 days += 1
+
+                daily_machine_sales = 0.0
 
                 for item in self.items:
                     name = item["item_name"]
@@ -67,10 +67,8 @@ class MachineTimeToThreeOutsSimulation:
                         item["daily_std"]
                     )
 
-                    # SALES ALWAYS COUNT
-                    cumulative_sales += demand
+                    daily_machine_sales += demand
 
-                    # INVENTORY ONLY FOR OUT DETECTION
                     if name not in outs:
                         sold = min(demand, inventory[name])
                         inventory[name] -= sold
@@ -78,6 +76,8 @@ class MachineTimeToThreeOutsSimulation:
                         if inventory[name] <= 0:
                             outs.add(name)
                             out_counter[name] += 1
+
+                cumulative_sales += daily_machine_sales
 
                 if day_3 is None and len(outs) >= 3:
                     day_3 = days
@@ -95,28 +95,28 @@ class MachineTimeToThreeOutsSimulation:
                 day_120 = self.max_days
 
             if day_120 <= day_3:
-                hit_120_before_3 += 1
+                prob_120_before_3 += 1
 
-            days_3_outs.append(day_3)
-            days_120.append(day_120)
+            days_to_3_outs.append(day_3)
+            days_to_120_vends.append(day_120)
 
         return {
-            "avg_days_to_3_outs": float(np.mean(days_3_outs)),
-            "avg_days_to_120_vends": float(np.mean(days_120)),
+            "avg_days_to_3_outs": float(np.mean(days_to_3_outs)),
+            "avg_days_to_120_vends": float(np.mean(days_to_120_vends)),
 
-            "p50_days": float(np.percentile(days_3_outs, 50)),
-            "p75_days": float(np.percentile(days_3_outs, 75)),
-            "p95_days": float(np.percentile(days_3_outs, 95)),
+            "p50_days": float(np.percentile(days_to_3_outs, 50)),
+            "p75_days": float(np.percentile(days_to_3_outs, 75)),
+            "p95_days": float(np.percentile(days_to_3_outs, 95)),
 
-            "p50_days_to_3_outs": float(np.percentile(days_3_outs, 50)),
-            "p75_days_to_3_outs": float(np.percentile(days_3_outs, 75)),
-            "p95_days_to_3_outs": float(np.percentile(days_3_outs, 95)),
+            "p50_days_to_3_outs": float(np.percentile(days_to_3_outs, 50)),
+            "p75_days_to_3_outs": float(np.percentile(days_to_3_outs, 75)),
+            "p95_days_to_3_outs": float(np.percentile(days_to_3_outs, 95)),
 
-            "p50_days_to_120_vends": float(np.percentile(days_120, 50)),
-            "p75_days_to_120_vends": float(np.percentile(days_120, 75)),
-            "p95_days_to_120_vends": float(np.percentile(days_120, 95)),
+            "p50_days_to_120_vends": float(np.percentile(days_to_120_vends, 50)),
+            "p75_days_to_120_vends": float(np.percentile(days_to_120_vends, 75)),
+            "p95_days_to_120_vends": float(np.percentile(days_to_120_vends, 95)),
 
-            "prob_120_vends_before_3_outs": hit_120_before_3 / self.number_of_simulations,
+            "prob_120_vends_before_3_outs": prob_120_before_3 / self.number_of_simulations,
 
             "item_out_percentages": {
                 item: count / self.number_of_simulations
