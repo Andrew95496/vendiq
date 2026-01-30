@@ -117,7 +117,7 @@ class MachineTimeToThreeOutsSimulation:
         )
 
         return {
-            "avg_days_to_3_outs": int(math.ceil(np.mean(days_to_3_outs))),
+            "avg_days_to_3_outs": int(math.floor(np.mean(days_to_3_outs))),
             "avg_days_to_120_vends": int(math.ceil(np.mean(days_to_120_vends))),
 
             "p50_days": float(np.percentile(days_to_3_outs, 50)),
