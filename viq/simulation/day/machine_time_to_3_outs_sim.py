@@ -2,6 +2,7 @@
 
 import numpy as np
 from collections import Counter
+import math
 
 
 class MachineTimeToThreeOutsSimulation:
@@ -116,8 +117,8 @@ class MachineTimeToThreeOutsSimulation:
         )
 
         return {
-            "avg_days_to_3_outs": float(np.mean(days_to_3_outs)),
-            "avg_days_to_120_vends": float(np.mean(days_to_120_vends)),
+            "avg_days_to_3_outs": int(math.ceil(np.mean(days_to_3_outs))),
+            "avg_days_to_120_vends": int(math.ceil(np.mean(days_to_120_vends))),
 
             "p50_days": float(np.percentile(days_to_3_outs, 50)),
             "p75_days": float(np.percentile(days_to_3_outs, 75)),
@@ -127,8 +128,8 @@ class MachineTimeToThreeOutsSimulation:
             "p75_days_to_120_vends": float(np.percentile(days_to_120_vends, 75)),
             "p95_days_to_120_vends": float(np.percentile(days_to_120_vends, 95)),
 
-            "avg_vends_at_3_outs": float(np.mean(vends_at_3_outs)),
-            "avg_outs_at_120_vends": float(np.mean(outs_at_120_vends)),
+            "avg_vends_at_3_outs": int(math.ceil(np.mean(vends_at_3_outs))),
+            "avg_outs_at_120_vends": int(math.ceil(np.mean(outs_at_120_vends))),
 
             "prob_120_vends_before_3_outs": hit_120_before_3 / self.number_of_simulations,
 
