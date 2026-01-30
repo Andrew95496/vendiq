@@ -64,11 +64,11 @@ class MachineTimeToThreeOutsSimulation:
                         item["daily_std"]
                     )
 
-                    daily_sales += demand
-
                     if name not in outs:
                         sold = min(demand, inventory[name])
                         inventory[name] -= sold
+                        daily_sales += sold
+
                         if inventory[name] <= 0:
                             outs.append(name)
                             if len(outs) <= 3:
@@ -119,14 +119,6 @@ class MachineTimeToThreeOutsSimulation:
         return {
             "avg_days_to_3_outs": int(math.floor(np.mean(days_to_3_outs))),
             "avg_days_to_120_vends": int(math.ceil(np.mean(days_to_120_vends))),
-
-            "p50_days": float(np.percentile(days_to_3_outs, 50)),
-            "p75_days": float(np.percentile(days_to_3_outs, 75)),
-            "p95_days": float(np.percentile(days_to_3_outs, 95)),
-
-            "p50_days_to_120_vends": float(np.percentile(days_to_120_vends, 50)),
-            "p75_days_to_120_vends": float(np.percentile(days_to_120_vends, 75)),
-            "p95_days_to_120_vends": float(np.percentile(days_to_120_vends, 95)),
 
             "avg_vends_at_3_outs": int(math.ceil(np.mean(vends_at_3_outs))),
             "avg_outs_at_120_vends": int(math.ceil(np.mean(outs_at_120_vends))),
