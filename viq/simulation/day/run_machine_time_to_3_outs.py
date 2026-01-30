@@ -1,5 +1,3 @@
-# run_machine_time_to_3_outs.py
-
 import numpy as np
 import pandas as pd
 from colorama import Fore, Style, init
@@ -14,8 +12,8 @@ if __name__ == "__main__":
     DAYS_PER_MONTH = 30
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/11965.xlsx", header=12)
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/11965_par.xlsx", header=12)
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/13361.xlsx", header=12)
+    df_par = pd.read_excel("/Users/andrewleacock1/Downloads/13361_par.xlsx", header=12)
 
     month_columns = get_month_columns(df_main)
 
@@ -72,13 +70,39 @@ if __name__ == "__main__":
     print(Fore.CYAN + Style.BRIGHT + "MACHINE TIME / SALES / OUTS")
     print(Fore.CYAN + "=" * 60)
 
-    print(Fore.WHITE + "Avg Days to 3 Outs:        " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_3_outs']}")
-    print(Fore.WHITE + "Avg Vends @ 3 Outs:        " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_vends_at_3_outs']}")
+    print(
+        Fore.WHITE
+        + "Avg Days to 3 Outs: "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['avg_days_to_3_outs']}"
+    )
+
+    print(
+        Fore.WHITE
+        + "Avg Vends @ 3 Outs: "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['avg_vends_at_3_outs']}"
+    )
 
     print(Fore.CYAN + "-" * 60)
 
-    print(Fore.WHITE + "Avg Days to 120 Vends:     " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_120_vends']}")
-    print(Fore.WHITE + "Avg Outs @ 120 Vends:      " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_outs_at_120_vends']}")
+    print(
+        Fore.WHITE
+        + "Avg Days to 120 Vends: "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['avg_days_to_120_vends']}"
+    )
+
+    print(
+        Fore.WHITE
+        + "Avg Outs @ 120 Vends: "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['avg_outs_at_120_vends']}"
+    )
 
     print(Fore.CYAN + "-" * 60)
 

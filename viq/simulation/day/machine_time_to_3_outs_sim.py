@@ -1,5 +1,3 @@
-# machine_time_to_3_outs_sim.py
-
 import numpy as np
 from collections import Counter
 import math
@@ -29,6 +27,11 @@ class MachineTimeToThreeOutsSimulation:
         x = np.random.normal(mean, std)
         return max(x, 0.0) if np.isfinite(x) else 0.0
 
+    def _sample_starting_inventory(self, par):
+        # biased toward full, but sometimes underfilled
+        pct = np.random.uniform(0.7, 1.0)
+        return par * pct
+
     def run(self):
         days_to_3_outs = []
         days_to_120_vends = []
@@ -42,7 +45,9 @@ class MachineTimeToThreeOutsSimulation:
         for _ in range(self.number_of_simulations):
 
             inventory = {
-                item["item_name"]: float(item["par_level"])
+                item["item_name"]: self._sample_starting_inventory(
+                    float(item["par_level"])
+                )
                 for item in self.items
             }
 
@@ -119,12 +124,9 @@ class MachineTimeToThreeOutsSimulation:
         return {
             "avg_days_to_3_outs": int(math.floor(np.mean(days_to_3_outs))),
             "avg_days_to_120_vends": int(math.ceil(np.mean(days_to_120_vends))),
-
             "avg_vends_at_3_outs": int(math.ceil(np.mean(vends_at_3_outs))),
             "avg_outs_at_120_vends": int(math.ceil(np.mean(outs_at_120_vends))),
-
             "prob_120_vends_before_3_outs": hit_120_before_3 / self.number_of_simulations,
-
             "item_out_percentages": item_out_percentages,
             "top_10_items_to_run_out": top_10_out_items
         }
