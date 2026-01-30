@@ -1,3 +1,5 @@
+# run_machine_time_to_3_outs.py
+
 import numpy as np
 import pandas as pd
 from colorama import Fore, Style, init
@@ -10,10 +12,10 @@ init(autoreset=True)
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
-    SIMS = 100
+    SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/12400.xlsx")
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/12400_par.xlsx")
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/14024.xlsx")
+    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/14024_par.xlsx")
 
     month_columns = get_month_columns(df_main)
 
@@ -29,6 +31,7 @@ if __name__ == "__main__":
     items = []
     for _, row in df_main.iterrows():
         item = row["Item Name"]
+
         if not isinstance(item, str) or item.lower().startswith("zz"):
             continue
         if item not in par_lookup:
@@ -38,7 +41,13 @@ if __name__ == "__main__":
             row, month_columns, DAYS_PER_MONTH
         )
 
-        if mean is None or std is None or not np.isfinite(mean) or not np.isfinite(std) or mean <= 0:
+        if (
+            mean is None
+            or std is None
+            or not np.isfinite(mean)
+            or not np.isfinite(std)
+            or mean <= 0
+        ):
             continue
 
         par = par_lookup[item]
@@ -52,35 +61,52 @@ if __name__ == "__main__":
             "par_level": int(par)
         })
 
-    sim = MachineTimeToThreeOutsSimulation(items, SIMS)
+    sim = MachineTimeToThreeOutsSimulation(
+        items=items,
+        number_of_simulations=SIMS
+    )
+
     result = sim.run()
 
     print(Fore.CYAN + "=" * 60)
-    print(Fore.CYAN + Style.BRIGHT + "MACHINE QUALITY VS SALES RISK")
+    print(Fore.CYAN + Style.BRIGHT + "MACHINE TIME / SALES / OUTS")
     print(Fore.CYAN + "=" * 60)
 
-    print(Fore.WHITE + "Avg Days to 3 Outs:   " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_3_outs']:.1f}")
-    print(Fore.WHITE + "P50 Days (3 Outs):    " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days']:.0f}")
-    print(Fore.WHITE + "P75 Days (3 Outs):    " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days']:.0f}")
-    print(Fore.WHITE + "P95 Days (3 Outs):    " + Style.BRIGHT + Fore.RED     + f"{result['p95_days']:.0f}")
+    print(Fore.WHITE + "Avg Days to 3 Outs:        " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_3_outs']:.1f}")
+    print(Fore.WHITE + "P50 Days (3 Outs):         " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days']:.0f}")
+    print(Fore.WHITE + "P75 Days (3 Outs):         " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days']:.0f}")
+    print(Fore.WHITE + "P95 Days (3 Outs):         " + Style.BRIGHT + Fore.RED     + f"{result['p95_days']:.0f}")
+    print(Fore.WHITE + "Avg Vends @ 3 Outs:        " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_vends_at_3_outs']:.1f}")
 
     print(Fore.CYAN + "-" * 60)
 
-    print(Fore.WHITE + "Avg Days to 120 Sales:" + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_120_vends']:.1f}")
-    print(Fore.WHITE + "P50 Days (120):       " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days_to_120_vends']:.0f}")
-    print(Fore.WHITE + "P75 Days (120):       " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days_to_120_vends']:.0f}")
-    print(Fore.WHITE + "P95 Days (120):       " + Style.BRIGHT + Fore.RED     + f"{result['p95_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "Avg Days to 120 Vends:     " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_days_to_120_vends']:.1f}")
+    print(Fore.WHITE + "P50 Days (120):            " + Style.BRIGHT + Fore.GREEN  + f"{result['p50_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "P75 Days (120):            " + Style.BRIGHT + Fore.MAGENTA + f"{result['p75_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "P95 Days (120):            " + Style.BRIGHT + Fore.RED     + f"{result['p95_days_to_120_vends']:.0f}")
+    print(Fore.WHITE + "Avg Outs @ 120 Vends:      " + Style.BRIGHT + Fore.YELLOW + f"{result['avg_outs_at_120_vends']:.1f}")
 
     print(Fore.CYAN + "-" * 60)
 
-    print(Fore.WHITE + "P(120 Sales Before 3 Outs): " + Style.BRIGHT + Fore.YELLOW +
-          f"{result['prob_120_vends_before_3_outs']:.1%}")
+    print(
+        Fore.WHITE
+        + "P(120 Vends Before 3 Outs): "
+        + Style.BRIGHT
+        + Fore.YELLOW
+        + f"{result['prob_120_vends_before_3_outs']:.1%}"
+    )
 
     print(Fore.CYAN + "=" * 60)
-    print(Fore.CYAN + Style.BRIGHT + "TOP ITEMS TO RUN OUT")
+    print(Fore.CYAN + Style.BRIGHT + "TOP ITEMS TO RUN OUT (FIRST 3)")
     print(Fore.CYAN + "=" * 60)
 
-    for i, (item, pct) in enumerate(result["top_10_items_to_run_out"].items(), 1):
-        print(f"{Style.BRIGHT}{Fore.CYAN}{i:>2}. {Fore.WHITE}{item:<30} {Fore.YELLOW}{pct:.1%}")
+    for i, (item, pct) in enumerate(
+        result["top_10_items_to_run_out"].items(), 1
+    ):
+        print(
+            f"{Style.BRIGHT}{Fore.CYAN}{i:>2}. "
+            f"{Fore.WHITE}{item:<30} "
+            f"{Style.BRIGHT}{Fore.YELLOW}{pct:.1%}"
+        )
 
     print(Fore.CYAN + "=" * 60)
