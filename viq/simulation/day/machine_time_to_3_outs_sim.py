@@ -29,7 +29,7 @@ class MachineTimeToThreeOutsSimulation:
 
     def _sample_starting_inventory(self, par):
         # biased toward full, but sometimes underfilled
-        pct = np.random.uniform(0.7, 1.0)
+        pct = np.random.uniform(0.55, 1.0)
         return par * pct
 
     def run(self):
