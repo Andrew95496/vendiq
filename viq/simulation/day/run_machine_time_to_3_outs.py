@@ -12,10 +12,10 @@ if __name__ == "__main__":
     DAYS_PER_MONTH = 30
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/4427.xlsx", header=12)
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/4427_par.xlsx", header=12)
+    df_sales = pd.read_excel("/Users/andrewleacock1/Downloads/13026.xlsx", header=12)
+    df_par  =  pd.read_excel("/Users/andrewleacock1/Downloads/13026_par.xlsx", header=12)
 
-    month_columns = get_month_columns(df_main)
+    month_columns = get_month_columns(df_sales)
 
     if "Vending Par Level" in df_par.columns:
         par_col = "Vending Par Level"
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     par_lookup = df_par.set_index("Item Name")[par_col]
 
     items = []
-    for _, row in df_main.iterrows():
+    for _, row in df_sales.iterrows():
         item = row["Item Name"]
 
         if not isinstance(item, str) or item.lower().startswith("zz"):
