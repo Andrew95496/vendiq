@@ -11,6 +11,7 @@ from stats_utils import get_month_columns, daily_stats_since_launch
 # -----------------------------
 RED = "\033[91m"
 YELLOW = "\033[93m"
+GREEN = "\033[92m"
 RESET = "\033[0m"
 
 
@@ -21,8 +22,15 @@ if __name__ == "__main__":
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/14414.xlsx", header=12)
-    df_par = pd.read_excel("/Users/andrewleacock1/Downloads/14414_par.xlsx", header=12)
+    df_main = pd.read_excel(
+        "/Users/andrewleacock1/Downloads/14414.xlsx",
+        header=12
+    )
+
+    df_par = pd.read_excel(
+        "/Users/andrewleacock1/Downloads/14414_par.xlsx",
+        header=12
+    )
 
     month_columns = get_month_columns(df_main)
 
@@ -81,18 +89,31 @@ if __name__ == "__main__":
             })
 
     # -----------------------------
-    # PRINT SUMMARY WITH CAPACITY FLAGS
+    # PRINT SUMMARY WITH FLAGS
     # -----------------------------
     for r in results:
         item = r["item_name"]
         capacity = capacity_lookup.get(item)
+        par = r["current_par_level"]
 
         color = RESET
+
         if capacity is not None:
+            # RED: avg demand physically exceeds capacity
             if r["avg_cycle_demand"] > capacity:
                 color = RED
+
+            # YELLOW: tail risk exceeds capacity
             elif r["p95_cycle_demand"] > capacity:
                 color = YELLOW
+
+            # GREEN: sim says raise par AND capacity allows it
+            elif (
+                r["avg_cycle_demand"] > par
+                and r["p95_cycle_demand"] > par
+                and capacity > par
+            ):
+                color = GREEN
 
         print(color + "=" * 60)
         print(item)
@@ -100,11 +121,11 @@ if __name__ == "__main__":
         print(f"Daily Std:            {r['daily_std']}")
         print(f"Avg Cycle Demand:     {r['avg_cycle_demand']}")
         print(f"P95 Cycle Demand:     {r['p95_cycle_demand']}")
+        print(f"Current Par Level:   {par}")
         print(f"Capacity:             {capacity}")
         print(f"Effective Inventory: {r['effective_inventory']}")
         print(f"Availability:        {r['availability']:.2%}")
         print(f"Stockout Prob:       {r['stockout_probability']:.2%}")
-        print(f"Current Par Level:   {r['current_par_level']}")
         print("=" * 60 + RESET)
 
     # -----------------------------
