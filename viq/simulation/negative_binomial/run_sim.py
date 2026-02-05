@@ -6,6 +6,14 @@ from asset_sim import AssetSimulation
 from stats_utils import get_month_columns, daily_stats_since_launch
 
 
+# -----------------------------
+# ANSI COLORS
+# -----------------------------
+RED = "\033[91m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
+
+
 if __name__ == "__main__":
 
     DAYS_PER_MONTH = 30
@@ -13,8 +21,8 @@ if __name__ == "__main__":
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/13026.xlsx", header=12)
-    df_par  = pd.read_excel("/Users/andrewleacock1/Downloads/13026_par.xlsx", header=12)
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/14414.xlsx", header=12)
+    df_par = pd.read_excel("/Users/andrewleacock1/Downloads/14414_par.xlsx", header=12)
 
     month_columns = get_month_columns(df_main)
 
@@ -25,7 +33,11 @@ if __name__ == "__main__":
     else:
         raise ValueError("Missing par column")
 
+    if "Capacity" not in df_par.columns:
+        raise ValueError("Missing Capacity column")
+
     par_lookup = df_par.set_index("Item Name")[par_col]
+    capacity_lookup = df_par.set_index("Item Name")["Capacity"]
 
     results = []
     sales_rows = []
@@ -69,20 +81,31 @@ if __name__ == "__main__":
             })
 
     # -----------------------------
-    # PRINT SUMMARY
+    # PRINT SUMMARY WITH CAPACITY FLAGS
     # -----------------------------
     for r in results:
-        print("=" * 60)
-        print(r["item_name"])
+        item = r["item_name"]
+        capacity = capacity_lookup.get(item)
+
+        color = RESET
+        if capacity is not None:
+            if r["avg_cycle_demand"] > capacity:
+                color = RED
+            elif r["p95_cycle_demand"] > capacity:
+                color = YELLOW
+
+        print(color + "=" * 60)
+        print(item)
         print(f"Avg Daily Sales:      {r['avg_daily_sales']}")
         print(f"Daily Std:            {r['daily_std']}")
-        print(f"P95 Cycle Demand:     {r['p95_cycle_demand']}")
         print(f"Avg Cycle Demand:     {r['avg_cycle_demand']}")
+        print(f"P95 Cycle Demand:     {r['p95_cycle_demand']}")
+        print(f"Capacity:             {capacity}")
         print(f"Effective Inventory: {r['effective_inventory']}")
         print(f"Availability:        {r['availability']:.2%}")
         print(f"Stockout Prob:       {r['stockout_probability']:.2%}")
         print(f"Current Par Level:   {r['current_par_level']}")
-    print("=" * 60)
+        print("=" * 60 + RESET)
 
     # -----------------------------
     # EXPORT SIMULATED SALES
@@ -90,6 +113,6 @@ if __name__ == "__main__":
     df_sales = pd.DataFrame(sales_rows)
 
     df_sales.to_csv(
-    "/Users/andrewleacock1/Downloads/simulated_sales_255.csv",
-    index=False
-)
+        "/Users/andrewleacock1/Downloads/simulated_sales_255.csv",
+        index=False
+    )
