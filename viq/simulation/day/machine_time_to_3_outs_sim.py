@@ -78,7 +78,6 @@ class MachineTimeToThreeOutsSimulation:
                             outs.append(name)
                             if len(outs) <= 3:
                                 out_counter[name] += 1
-
                 cumulative_sales += daily_sales
 
                 if day_3 is None and len(outs) >= 3:

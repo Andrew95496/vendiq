@@ -17,20 +17,13 @@ RESET = "\033[0m"
 
 if __name__ == "__main__":
 
-    DAYS_PER_MONTH = 30
-    DAYS_BETWEEN_VISITS = 21
+    DAYS_PER_MONTH = 20
+    DAYS_BETWEEN_VISITS = 20
     LEAD_TIME_DAYS = 2
     SIMS = 10_000
 
-    df_main = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/14414.xlsx",
-        header=12
-    )
-
-    df_par = pd.read_excel(
-        "/Users/andrewleacock1/Downloads/14414_par.xlsx",
-        header=12
-    )
+    df_main = pd.read_excel("/Users/andrewleacock1/Downloads/4661.xlsx", header=12)
+    df_par =  pd.read_excel("/Users/andrewleacock1/Downloads/4661_par.xlsx", header=12)
 
     month_columns = get_month_columns(df_main)
 
@@ -131,9 +124,9 @@ if __name__ == "__main__":
     # -----------------------------
     # EXPORT SIMULATED SALES
     # -----------------------------
-    df_sales = pd.DataFrame(sales_rows)
+    # df_sales = pd.DataFrame(sales_rows)
 
-    df_sales.to_csv(
-        "/Users/andrewleacock1/Downloads/simulated_sales_255.csv",
-        index=False
-    )
+    # df_sales.to_csv(
+    #     "/Users/andrewleacock1/Downloads/simulated_sales_255.csv",
+    #     index=False
+    # )
