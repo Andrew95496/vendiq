@@ -4,6 +4,17 @@ import math
 
 
 class MachineTimeToThreeOutsSimulation:
+    """
+    Simulates vending machine performance between services.
+
+    No restocking occurs.
+
+    Tracks:
+    - Days until 3 items run out
+    - Days until cumulative sales reach vend_threshold
+    - Whether 120 vends is even achievable before collapse
+    """
+
     def __init__(
         self,
         items,
@@ -11,104 +22,127 @@ class MachineTimeToThreeOutsSimulation:
         max_days=365,
         vend_threshold=120
     ):
+        # Remove placeholder SKUs
         self.items = [
             item for item in items
             if not item["item_name"].lower().startswith("zz")
         ]
+
         self.number_of_simulations = number_of_simulations
         self.max_days = max_days
         self.vend_threshold = vend_threshold
 
-    def _sample_daily_demand(self, mean, std):
-        if not np.isfinite(mean) or mean <= 0:
-            return 0.0
-        if not np.isfinite(std) or std <= 0:
-            return float(mean)
-        x = np.random.normal(mean, std)
-        return max(x, 0.0) if np.isfinite(x) else 0.0
+        # Convert item data to NumPy arrays for performance
+        self.item_names = np.array(
+            [item["item_name"] for item in self.items]
+        )
 
-    def _sample_starting_inventory(self, par):
-        # biased toward full, but sometimes underfilled
-        pct = np.random.uniform(0.55, 1.0)
-        return par * pct
+        self.means = np.array(
+            [item["avg_daily_sales"] for item in self.items],
+            dtype=float
+        )
+
+        self.stds = np.array(
+            [item["daily_std"] for item in self.items],
+            dtype=float
+        )
+
+        self.pars = np.array(
+            [item["par_level"] for item in self.items],
+            dtype=float
+        )
+
+        self.n_items = len(self.items)
 
     def run(self):
-        days_to_3_outs = []
-        days_to_120_vends = []
 
-        vends_at_3_outs = []
-        outs_at_120_vends = []
+        sims = self.number_of_simulations
+        max_days = self.max_days
+
+        days_to_3_outs = np.zeros(sims)
+        days_to_120_vends = np.full(sims, np.nan)
+
+        vends_at_3_outs = np.zeros(sims)
+        outs_at_120_vends = np.zeros(sims)
 
         hit_120_before_3 = 0
+        hit_120_total = 0
+
         out_counter = Counter()
 
-        for _ in range(self.number_of_simulations):
+        for sim in range(sims):
 
-            inventory = {
-                item["item_name"]: self._sample_starting_inventory(
-                    float(item["par_level"])
-                )
-                for item in self.items
-            }
+            # Start fully stocked
+            inventory = self.pars.copy()
+            outs = np.zeros(self.n_items, dtype=bool)
 
-            outs = []
             cumulative_sales = 0.0
-
             day_3 = None
             day_120 = None
-            sales_at_3 = None
-            outs_at_120 = None
 
-            for day in range(1, self.max_days + 1):
-                daily_sales = 0.0
+            for day in range(1, max_days + 1):
 
-                for item in self.items:
-                    name = item["item_name"]
-                    demand = self._sample_daily_demand(
-                        item["avg_daily_sales"],
-                        item["daily_std"]
-                    )
+                # Generate daily demand per SKU
+                demand = np.random.normal(self.means, self.stds)
+                demand = np.where(demand < 0, 0, demand)
 
-                    if name not in outs:
-                        sold = min(demand, inventory[name])
-                        inventory[name] -= sold
-                        daily_sales += sold
+                # Sales limited by available inventory
+                sold = np.minimum(demand, inventory)
 
-                        if inventory[name] <= 0:
-                            outs.append(name)
-                            if len(outs) <= 3:
-                                out_counter[name] += 1
-                cumulative_sales += daily_sales
+                inventory -= sold
+                cumulative_sales += sold.sum()
 
-                if day_3 is None and len(outs) >= 3:
+                # Detect newly exhausted SKUs
+                new_outs = (inventory <= 0) & (~outs)
+
+                if new_outs.any():
+                    indices = np.where(new_outs)[0]
+                    for idx in indices:
+                        out_counter[self.item_names[idx]] += 1
+
+                outs |= new_outs
+
+                # First time 3 items are out
+                if day_3 is None and outs.sum() >= 3:
                     day_3 = day
-                    sales_at_3 = cumulative_sales
+                    vends_at_3_outs[sim] = cumulative_sales
 
+                # First time cumulative sales reach threshold
                 if day_120 is None and cumulative_sales >= self.vend_threshold:
                     day_120 = day
-                    outs_at_120 = len(outs)
+                    outs_at_120_vends[sim] = outs.sum()
+                    hit_120_total += 1
 
+                # If inventory completely depleted, stop simulation
+                if inventory.sum() <= 0:
+                    break
+
+                # Stop early if both milestones reached
                 if day_3 is not None and day_120 is not None:
                     break
 
             if day_3 is None:
-                day_3 = self.max_days
-                sales_at_3 = cumulative_sales
+                day_3 = max_days
 
-            if day_120 is None:
-                day_120 = self.max_days
-                outs_at_120 = len(outs)
+            if day_120 is not None:
+                days_to_120_vends[sim] = day_120
 
-            if day_120 <= day_3:
+            if day_120 is not None and day_120 <= day_3:
                 hit_120_before_3 += 1
 
-            days_to_3_outs.append(day_3)
-            days_to_120_vends.append(day_120)
-            vends_at_3_outs.append(sales_at_3)
-            outs_at_120_vends.append(outs_at_120)
+            days_to_3_outs[sim] = day_3
 
+        # Determine correct reporting for 120 vends
+        if hit_120_total == 0:
+            avg_days_to_120 = "Cannot reach 120 vends between services"
+            avg_outs_at_120 = None
+        else:
+            avg_days_to_120 = int(np.ceil(np.nanmean(days_to_120_vends)))
+            avg_outs_at_120 = int(np.ceil(np.nanmean(outs_at_120_vends)))
+
+        # Compute item-level out probabilities
         item_out_percentages = {
-            item: count / self.number_of_simulations
+            item: count / sims
             for item, count in out_counter.items()
         }
 
@@ -121,11 +155,11 @@ class MachineTimeToThreeOutsSimulation:
         )
 
         return {
-            "avg_days_to_3_outs": int(math.floor(np.mean(days_to_3_outs))),
-            "avg_days_to_120_vends": int(math.ceil(np.mean(days_to_120_vends))),
-            "avg_vends_at_3_outs": int(math.ceil(np.mean(vends_at_3_outs))),
-            "avg_outs_at_120_vends": int(math.ceil(np.mean(outs_at_120_vends))),
-            "prob_120_vends_before_3_outs": hit_120_before_3 / self.number_of_simulations,
+            "avg_days_to_3_outs": int(np.floor(np.mean(days_to_3_outs))),
+            "avg_days_to_120_vends": avg_days_to_120,
+            "prob_120_vends_before_3_outs": hit_120_before_3 / sims,
+            "avg_vends_at_3_outs": int(np.ceil(np.mean(vends_at_3_outs))),
+            "avg_outs_at_120_vends": avg_outs_at_120,
             "item_out_percentages": item_out_percentages,
             "top_10_items_to_run_out": top_10_out_items
         }
