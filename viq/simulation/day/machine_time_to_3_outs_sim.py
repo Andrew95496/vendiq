@@ -73,7 +73,9 @@ class MachineTimeToThreeOutsSimulation:
         for sim in range(sims):
 
             # Start fully stocked
-            inventory = self.pars.copy()
+            fill_rate = np.random.normal(0.95, 0.03)
+            fill_rate = np.clip(fill_rate, 0.80, 1.00)
+            inventory = self.pars * fill_rate
             outs = np.zeros(self.n_items, dtype=bool)
 
             cumulative_sales = 0.0

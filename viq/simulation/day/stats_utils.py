@@ -1,6 +1,7 @@
 # stats_utils.py
 
 import re
+import numpy as np
 import pandas as pd
 
 
@@ -19,6 +20,22 @@ def daily_stats_since_launch(row, month_columns, days_per_month):
     for i, v in enumerate(monthly):
         if v > 0:
             daily = monthly[i:] / days_per_month
-            return daily.mean(), daily.std(ddof=1)
+
+            n = len(daily)
+
+            # increasing weights so most recent month is weighted highest
+            weights = np.arange(1, n + 1)
+
+            # weighted mean
+            weighted_mean = np.average(daily, weights=weights)
+
+            # weighted standard deviation
+            weighted_var = np.average(
+                (daily - weighted_mean) ** 2,
+                weights=weights
+            )
+            weighted_std = np.sqrt(weighted_var)
+
+            return weighted_mean, weighted_std
 
     return 0.0, 0.0
