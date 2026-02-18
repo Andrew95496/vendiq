@@ -9,7 +9,7 @@ td_y = np.random.randint(0, 100, size=1000)
 w = np.random.rand()
 b = np.random.rand()
 
-lr = 0.000001          # step size for gradient descent
+lr = 0.000002          # step size for gradient descent
 epochs = 50          # full passes over dataset
 batch_size = 16      # How much of the data it iterates over before it updates
 
