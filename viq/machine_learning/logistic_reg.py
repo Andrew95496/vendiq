@@ -8,6 +8,8 @@ b = np.random.normal()
 lr = 0.000001
 n = len(X)
 
+batch_size  = int(n/10)
+
 
 # Stochastic gradient descent
 
@@ -21,7 +23,34 @@ for _ in range(n):
 
     w -= lr * dw
     b -= lr * db
-    print(f"Stochastic: {'weight(s):':<15}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+    print(f"Stochastic: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+
+
+#  Mini-Batch gradient descent
+for _ in range(n):
+    i = np.random.permutation(n)
+    X = X[i]
+    y = y[i]
+
+    for _ in range(0, n, batch_size):
+        end = _ + batch_size
+
+        Xb = X[_:end]
+        yb = y[_:end]
+
+        z = w * Xb + b
+        lg = 1 / (1 + np.exp(-z))
+
+        m = len(Xb)
+
+        dw = (1/m) * np.sum((lg - yb) * Xb)
+        db = (1/m) * np.sum(lg - yb)
+
+        w -= lr * dw
+        b -= lr * db
+
+        print(f"Mini-Batch: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+
 
 
 #  Full batch gradient descent
@@ -35,6 +64,6 @@ for _ in range(n):
 
     w -= lr * dw
     b -= lr * db
-    print(f"Full Batch: {'weight(s):':<15}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+    print(f"Full Batch: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
 
 
