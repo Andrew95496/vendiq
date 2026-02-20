@@ -35,7 +35,7 @@ y_test_data = (y_test == 8)
 sgd_clf = SGDClassifier(max_iter=5, tol=None, random_state=42)
 sgd_clf.fit(X_train, y_train_data)
 y_pred = sgd_clf.predict(X_train)
-print(y_pred)
+print(f"Prediction: {y_pred}")
 
 # Cross Valadation
 cssv = cross_val_score(sgd_clf, X_train, y_train_data, cv=3, scoring="accuracy")
@@ -44,7 +44,7 @@ print(f"Accuracy: {cssv}")
 # Confusion Matrix
 y_train_pred = cross_val_predict(sgd_clf, X_train, y_train_data, cv=3)
 q = confusion_matrix(y_train_data, y_train_pred)
-print(q)
+print(f"Confusion Matrix: {q}")
 
 # Precision and Recall
 ps = precision_score(y_train_data, y_pred)
@@ -55,4 +55,4 @@ print(f"Precision Score: {ps} | Recall Score: {rs}")
 
 #f1 score
 f1 = f1_score(y_train_data, y_pred)
-print(f1)
+print(f"FScore: {f1}")
