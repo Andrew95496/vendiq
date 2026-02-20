@@ -1,69 +1,157 @@
 import numpy as np
-X = np.random.randint(0, 100, size=10)
-y = np.random.randint(0, 100, size=10)
+import plotly.express as px
+import pandas as pd
 
+df = pd.read_excel("/Users/andrewleacock1/Downloads/xxx.xlsx")
 
-w = np.random.normal()
-b = np.random.normal()
-lr = 0.000001
-n = len(X)
+# split the two tables
+left = df[["Asset ID","rev"]].dropna()
+right = df[["Asset ID.1","Visit Count 90"]].dropna()
 
-batch_size  = int(n/10)
+right = right.rename(columns={
+    "Asset ID.1":"Asset ID",
+    "Visit Count 90":"visit_90d"
+})
 
+merged = left.merge(right, on="Asset ID", how="inner")
 
-# Stochastic gradient descent
+# Data
+X = merged["visit_90d"].to_numpy(dtype=float)
+y = merged["rev"].to_numpy(dtype=int)
 
-for _ in range(n):
-    i = np.random.randint(n)
-    z = w * X[i] + b
-    lg = 1 / (1 + np.exp(-z))
+# Train / Test split
+split = int(len(X) * 0.8)
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
+n = len(X_train)
 
-    dw = (lg - y[i]) * X[i]
-    db = (lg - y[i])
+# scale using train only
+mu = X_train.mean()
+sigma = X_train.std()
 
-    w -= lr * dw
-    b -= lr * db
-    print(f"Stochastic: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+X_train = (X_train - mu) / sigma
+X_test  = (X_test  - mu) / sigma
 
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
 
-#  Mini-Batch gradient descent
-for _ in range(n):
-    i = np.random.permutation(n)
-    X = X[i]
-    y = y[i]
+def compute_loss(z, y):
+    lg = sigmoid(z)
+    lg = np.clip(lg, 1e-15, 1 - 1e-15)
+    return -(y * np.log(lg) + (1 - y) * np.log(1 - lg))
 
-    for _ in range(0, n, batch_size):
-        end = _ + batch_size
+def accuracy(w, b):
+    preds = sigmoid(w * X_test + b)
+    preds_class = (preds >= 0.5).astype(int)
+    return (preds_class == y_test).mean()
 
-        Xb = X[_:end]
-        yb = y[_:end]
+lr = 0.01
+epochs = 5
+
+# =========================
+# SGD
+# =========================
+w = np.random.randn()
+b = np.random.randn()
+sgd_loss = []
+
+for _ in range(epochs):
+    for i in np.random.permutation(n):
+        z = w * X_train[i] + b
+        sgd_loss.append(compute_loss(z, y_train[i]))
+
+        lg = sigmoid(z)
+        w -= lr * (lg - y_train[i]) * X_train[i]
+        b -= lr * (lg - y_train[i])
+
+print("\nSGD Results")
+print("w:", w)
+print("b:", b)
+print("Test Accuracy:", accuracy(w, b))
+
+fig1 = px.line(y=sgd_loss, title="SGD Loss")
+fig1.show()
+
+# =========================
+# Mini Batch
+# =========================
+w = np.random.randn()
+b = np.random.randn()
+batch_size = 256
+mini_loss = []
+
+for _ in range(epochs):
+    idx = np.random.permutation(n)
+    X_shuff = X_train[idx]
+    y_shuff = y_train[idx]
+
+    for i in range(0, n, batch_size):
+        Xb = X_shuff[i:i+batch_size]
+        yb = y_shuff[i:i+batch_size]
 
         z = w * Xb + b
-        lg = 1 / (1 + np.exp(-z))
+        mini_loss.append(np.mean(compute_loss(z, yb)))
 
-        m = len(Xb)
+        lg = sigmoid(z)
+        w -= lr * np.mean((lg - yb) * Xb)
+        b -= lr * np.mean(lg - yb)
 
-        dw = (1/m) * np.sum((lg - yb) * Xb)
-        db = (1/m) * np.sum(lg - yb)
+print("\nMini Batch Results")
+print("w:", w)
+print("b:", b)
+print("Test Accuracy:", accuracy(w, b))
 
-        w -= lr * dw
-        b -= lr * db
+fig2 = px.line(y=mini_loss, title="Mini Batch Loss")
+fig2.show()
 
-        print(f"Mini-Batch: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+# =========================
+# Full Batch
+# =========================
+w = np.random.randn()
+b = np.random.randn()
+full_loss = []
 
+for _ in range(epochs * 100):
+    z = w * X_train + b
+    full_loss.append(np.mean(compute_loss(z, y_train)))
 
+    lg = sigmoid(z)
+    w -= lr * np.mean((lg - y_train) * X_train)
+    b -= lr * np.mean(lg - y_train)
 
-#  Full batch gradient descent
+print("\nFull Batch Results")
+print("w:", w)
+print("b:", b)
+print("Test Accuracy:", accuracy(w, b))
 
-for _ in range(n):
-    z = w * X + b
-    lg = 1 / (1 + np.exp(-z))
+fig3 = px.line(y=full_loss, title="Full Batch Loss")
+fig3.show()
 
-    dw = (1/n) * np.sum((lg - y) * X)
-    db = (1/n) * np.sum(lg - y)
+# =========================
+# Model Evaluation
+# =========================
+probs = sigmoid(w * X_test + b)
+preds = (probs >= 0.5).astype(int)
 
-    w -= lr * dw
-    b -= lr * db
-    print(f"Full Batch: {'weight(s):':<6}{w:>10.6f} | {'bias:':<6}{b:>10.6f}")
+tp = np.sum((preds==1)&(y_test==1))
+fp = np.sum((preds==1)&(y_test==0))
+fn = np.sum((preds==0)&(y_test==1))
+tn = np.sum((preds==0)&(y_test==0))
 
+precision = tp/(tp+fp) if (tp+fp)>0 else 0
+recall = tp/(tp+fn) if (tp+fn)>0 else 0
+accuracy = (tp+tn)/len(y_test)
 
+print("\nConfusion Matrix")
+print("TP:",tp,"FP:",fp,"FN:",fn,"TN:",tn)
+
+print("\nMetrics")
+print("Accuracy:",accuracy)
+print("Precision:",precision)
+print("Recall:",recall)
+
+order = np.argsort(-probs)
+top = y_test[order][:50]
+
+print("\nTop 50 predicted bad machines actually bad rate:")
+print(top.mean())
