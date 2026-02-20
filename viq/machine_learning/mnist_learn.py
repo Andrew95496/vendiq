@@ -1,9 +1,10 @@
 from sklearn.datasets import fetch_openml
 import plotly.express as px 
+import plotly.graph_objects as go
 import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, precision_recall_curve
 
 mnist = fetch_openml("mnist_784", version=1)
 
@@ -14,14 +15,7 @@ y = y.astype(np.uint8)
 some_digit = X[16000]
 # some_digit_img = some_digit.reshape(28, 28)
 
-# fig = px.imshow(
-#     some_digit_img,
-#     color_continuous_scale="greys",
-#     aspect="equal"
-# )
 
-# fig.update_layout(coloraxis_showscale=False)
-# fig.show()
 
 # test data/ training data
 
@@ -56,3 +50,35 @@ print(f"Precision Score: {ps} | Recall Score: {rs}")
 #f1 score
 f1 = f1_score(y_train_data, y_pred)
 print(f"FScore: {f1}")
+
+y_scores = sgd_clf.decision_function([some_digit])
+print(f"Y Scores: {y_scores}")
+
+threshold = 0
+y_some_digit_pred = (y_scores > threshold)
+print(f"FLEX: {y_some_digit_pred}")
+
+y_scores2 = cross_val_predict(sgd_clf, X_train, y_train_data, cv=3,
+method="decision_function")
+print(f"Y Scores 2: {y_scores2}")
+
+precisions, recalls, thresholds = precision_recall_curve(y_train_data, y_scores2)
+
+print(f"LOOKING: {precisions} | {recalls} | {thresholds}")
+
+def plot_precision_recall_vs_threshold(precisions, recalls, thresholds):
+    fig = go.Figure([
+        go.Scatter(x=thresholds, y=precisions[:-1], name="Precision", line=dict(dash="dash")),
+        go.Scatter(x=thresholds, y=recalls[:-1], name="Recall")
+    ])
+
+    fig.update_layout(xaxis_title="Threshold", yaxis_range=[0,1])
+    fig.show()
+
+plot_precision_recall_vs_threshold(precisions, recalls, thresholds)
+
+def prec_recall(p, r):
+    fig = px.scatter(y=p, x=r, labels={'x':'Recalls', 'y':'Precision'})
+    fig.show()
+
+prec_recall(precisions, recalls)
